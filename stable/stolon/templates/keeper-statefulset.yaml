@@ -104,26 +104,53 @@ spec:
         - name: stolon-secrets
           secret:
             secretName: {{ template "stolon.fullname" . }}
+# {{- if .Values.persistence.enabled }}
+#   volumeClaimTemplates:
+#     - metadata:
+#         name: data
+#       spec:
+#         accessModes:
+#   {{- range .Values.persistence.accessModes }}
+#           - {{ . | quote }}
+#   {{- end }}
+#         resources:
+#           requests:
+#             storage: {{ .Values.persistence.size | quote }}
+#   {{- if .Values.persistence.storageClassName }}
+#     {{- if (eq "-" .Values.persistence.storageClassName) }}
+#         storageClassName: ""
+#     {{- else }}
+#         storageClassName: "{{ .Values.persistence.storageClassName }}"
+#     {{- end }}
+#   {{- end }}
+# {{- else }}
+#         - name: data
+#           emptyDir: {}
+# {{- end }}
 {{- if .Values.persistence.enabled }}
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes:
-  {{- range .Values.persistence.accessModes }}
-          - {{ . | quote }}
-  {{- end }}
-        resources:
-          requests:
-            storage: {{ .Values.persistence.size | quote }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: data
+spec:
+  accessModes:
+{{- range .Values.persistence.accessModes }}
+    - {{ . | quote }}
+{{- end }}
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size | quote }}
   {{- if .Values.persistence.storageClassName }}
     {{- if (eq "-" .Values.persistence.storageClassName) }}
-        storageClassName: ""
+  storageClassName: ""
     {{- else }}
-        storageClassName: "{{ .Values.persistence.storageClassName }}"
+  storageClassName: "{{ .Values.persistence.storageClassName }}"
     {{- end }}
   {{- end }}
-{{- else }}
-        - name: data
-          emptyDir: {}
+  # selector:
+  #   matchLabels:
+  #     release: "stable"
+  #   matchExpressions:
+  #     - {key: environment, operator: In, values: [dev]}
 {{- end }}
